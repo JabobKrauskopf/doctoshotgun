@@ -150,12 +150,12 @@ class CityNotFound(Exception):
 
 
 class Doctolib(LoginBrowser):
-    BASEURL = 'https://www.doctolib.fr'
+    BASEURL = 'https://www.doctolib.de'
 
     login = URL('/login.json', LoginPage)
-    centers = URL(r'/vaccination-covid-19/(?P<where>\w+)', CentersPage)
+    centers = URL(r'/institut/(?P<where>\w+)', CentersPage)
     center_result = URL(r'/search_results/(?P<id>\d+).json', CenterResultPage)
-    center = URL(r'/centre-de-sante/.*', CenterPage)
+    center = URL(r'/impfung-covid-19-corona/.*', CenterPage)
     center_booking = URL(r'/booking/(?P<center_id>.+).json', CenterBookingPage)
     availabilities = URL(r'/availabilities.json', AvailabilitiesPage)
     second_shot_availabilities = URL(r'/second_shot_availabilities.json', AvailabilitiesPage)
@@ -189,7 +189,7 @@ class Doctolib(LoginBrowser):
         return self._logged
 
     def do_login(self):
-        self.open('https://www.doctolib.fr/sessions/new')
+        self.open('https://www.doctolib.de/sessions/new')
         try:
             self.login.go(json={'kind': 'patient',
                                 'username': self.username,
@@ -242,7 +242,7 @@ class Doctolib(LoginBrowser):
 
         center_page = self.center_booking.go(center_id=center_id)
         profile_id = self.page.get_profile_id()
-        motive_id = self.page.find_motive(r'1re.*(Pfizer|Moderna)')
+        motive_id = self.page.find_motive(r'Erstimpfung.*(Pfizer|Moderna)')
 
         if not motive_id:
             log('Unable to find mRNA motive')
@@ -376,7 +376,7 @@ class Doctolib(LoginBrowser):
         self.appointment_post.go(id=a_id, data=json.dumps(data), headers=headers, method='PUT')
 
         if 'redirection' in self.page.doc and not 'confirmed-appointment' in self.page.doc['redirection']:
-            log('  ├╴ Open %s to complete', 'https://www.doctolib.fr' + self.page.doc['redirection'])
+            log('  ├╴ Open %s to complete', 'https://www.doctolib.de' + self.page.doc['redirection'])
 
         self.appointment_post.go(id=a_id)
 
@@ -491,9 +491,9 @@ class Application:
                         log('💉 %s Congratulations.' % colored('Booked!', 'green', attrs=('bold',)))
                         return 0
 
-                    sleep(1)
+                    sleep(0.1)
 
-                sleep(5)
+                sleep(1)
         except CityNotFound as e:
             print('\n%s: City %s not found. For now Doctoshotgun works only in France.' % (colored('Error', 'red'), colored(e, 'yellow')))
             return 1
